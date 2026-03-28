@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "Bottle": {
+      "title": "Bottle",
+      "description": "A bottle of alcohol purchased and tracked by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the bottle" },
+        "name": { "type": "string", "description": "Name of the bottle" },
+        "type": { "type": "string", "description": "Type of alcohol (e.g., Beer, Wine)" },
+        "purchaseDate": { "type": "string", "format": "date-time", "description": "Date of purchase" },
+        "price": { "type": "number", "description": "Price paid for the bottle" },
+        "volume": { "type": "number", "description": "Volume in ml" },
+        "status": { "type": "string", "enum": ["unopened", "opened", "finished"], "description": "Current status of the bottle" },
+        "openedAt": { "type": "string", "format": "date-time", "description": "Date when the bottle was opened" },
+        "finishedAt": { "type": "string", "format": "date-time", "description": "Date when the bottle was finished" },
+        "uid": { "type": "string", "description": "UID of the owner" }
+      },
+      "required": ["id", "name", "type", "purchaseDate", "price", "volume", "status", "uid"]
+    }
+  },
+  "firestore": {
+    "/bottles/{bottleId}": {
+      "schema": "Bottle",
+      "description": "Collection of alcohol bottles tracked by users."
+    }
+  }
+}

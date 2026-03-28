@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: bottles
+    // Document ID: {bottleId}
+    // Fields:
+    //   - id: string (required) - Unique ID for the bottle
+    //   - name: string (required, minLen: 1, maxLen: 100) - Name of the bottle
+    //   - type: string (required, enum: Beer, Wine, Whiskey, Vodka, Rum, Gin, Tequila, Brandy, Cider, Other)
+    //   - purchaseDate: string (required, ISO 8601) - Date of purchase
+    //   - price: number (required, positive) - Price paid for the bottle
+    //   - volume: number (required, positive) - Volume in ml
+    //   - status: string (required, enum: unopened, opened, finished)
+    //   - openedAt: string (optional, ISO 8601)
+    //   - finishedAt: string (optional, ISO 8601)
+    //   - uid: string (required, immutable) - UID of the owner
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function isPositive(field) {
+      return request.resource.data[field] is number && request.resource.data[field] >= 0;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "kunalrrv@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidBottle(data) {
+      let allowedTypes = ['Beer', 'Wine', 'Whiskey', 'Vodka', 'Rum', 'Gin', 'Tequila', 'Brandy', 'Cider', 'Other'];
+      let allowedStatuses = ['unopened', 'opened', 'finished'];
+      
+      return hasRequiredFields(['id', 'name', 'type', 'purchaseDate', 'price', 'volume', 'status', 'uid']) &&
+             hasOnlyAllowedFields(['id', 'name', 'type', 'purchaseDate', 'price', 'volume', 'status', 'uid', 'openedAt', 'finishedAt']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.type in allowedTypes &&
+             isValidDateString(data.purchaseDate) &&
+             data.price is number && data.price >= 0 &&
+             data.volume is number && data.volume > 0 &&
+             data.status in allowedStatuses &&
+             (!('openedAt' in data) || isValidDateString(data.openedAt)) &&
+             (!('finishedAt' in data) || isValidDateString(data.finishedAt)) &&
+             data.uid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /bottles/{bottleId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidBottle(request.resource.data) && uidUnchanged();
+      allow update: if isAuthenticated() && isDocOwner() && isValidBottle(request.resource.data) && uidNotModified();
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.role == 'user';
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role; // Cannot change own role
+      allow delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
