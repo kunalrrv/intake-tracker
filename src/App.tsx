@@ -10,7 +10,8 @@ import AddBottleForm from './components/AddBottleForm';
 import BottleCard from './components/BottleCard';
 import Reports from './components/Reports';
 import SettingsComponent from './components/Settings';
-import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3 } from 'lucide-react';
+import HelpMe from './components/HelpMe';
+import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   auth, 
@@ -89,7 +90,7 @@ function AlcoholTrackerApp() {
   const [user, setUser] = React.useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
   const [bottles, setBottles] = React.useState<Bottle[]>([]);
-  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help'>('dashboard');
   const [isLoading, setIsLoading] = React.useState(true);
   const [currency, setCurrency] = React.useState(localStorage.getItem('currency') || '$');
   const [theme, setTheme] = React.useState<'light' | 'dark'>((localStorage.getItem('theme') as 'light' | 'dark') || 'light');
@@ -650,6 +651,17 @@ function AlcoholTrackerApp() {
                 )}
               </motion.div>
             )}
+
+            {activeTab === 'help' && (
+              <motion.div
+                key="help"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <HelpMe />
+              </motion.div>
+            )}
           </AnimatePresence>
         )}
       </main>
@@ -680,6 +692,12 @@ function AlcoholTrackerApp() {
             onClick={() => setActiveTab('history')}
             icon={<History size={20} />}
             label="History"
+          />
+          <NavButton
+            active={activeTab === 'help'}
+            onClick={() => setActiveTab('help')}
+            icon={<HeartHandshake size={20} />}
+            label="Help"
           />
         </div>
       </nav>

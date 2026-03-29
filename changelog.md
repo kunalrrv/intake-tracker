@@ -5,6 +5,10 @@ All notable changes to the **Alcohol Intake Tracker** project will be documented
 ## [1.1.0] - 2026-03-29
 
 ### Added
+- **Help Me Page:**
+  - Added a dedicated "Help" tab in the navigation.
+  - Lists organizations like AA, SMART Recovery, and SAMHSA to help users reduce alcohol usage.
+  - Includes descriptions, website links, and contact information for each resource.
 - **Email & Password Authentication:**
   - Users can now register and log in using their email and password.
   - Added a "Confirm Password" field to the registration form with validation.
