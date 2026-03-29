@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ALCOHOL_TYPES } from '../constants';
 import { Bottle, BottleStatus } from '../types';
 import { Plus, X } from 'lucide-react';
@@ -11,6 +11,8 @@ interface AddBottleFormProps {
 
 export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     type: 'Beer',
@@ -18,6 +20,17 @@ export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
     volume: '750',
     purchaseDate: new Date().toISOString().split('T')[0],
   });
+
+  useEffect(() => {
+    if (isOpen && formRef.current) {
+      // Scroll to the form
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Focus the first input
+      setTimeout(() => {
+        firstInputRef.current?.focus();
+      }, 300); // Small delay to allow animation to complete
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +53,7 @@ export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
   };
 
   return (
-    <div className="mb-6">
+    <div className="mb-6" ref={formRef}>
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
@@ -66,6 +79,7 @@ export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Bottle Name</label>
               <input
+                ref={firstInputRef}
                 required
                 type="text"
                 value={formData.name}

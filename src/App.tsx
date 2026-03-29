@@ -526,15 +526,15 @@ function AlcoholTrackerApp() {
                 {user.displayName?.split(' ')[0]}
               </span>
             </div>
-            <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-600 transition-colors" title="Logout">
-              <LogOut size={20} />
-            </button>
             <button 
               onClick={() => setActiveTab('settings')}
               className={`p-2 transition-colors ${activeTab === 'settings' ? 'text-red-800' : 'text-gray-400 hover:text-gray-600'}`}
               title="Settings"
             >
               <Settings size={20} />
+            </button>
+            <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-600 transition-colors" title="Logout">
+              <LogOut size={20} />
             </button>
           </div>
         </div>
