@@ -8,9 +8,10 @@ interface BottleCardProps {
   bottle: Bottle;
   onMarkAsFinished: (id: string) => void;
   onDelete: (id: string) => void;
+  currency: string;
 }
 
-const BottleCard: React.FC<BottleCardProps> = ({ bottle, onMarkAsFinished, onDelete }) => {
+const BottleCard: React.FC<BottleCardProps> = ({ bottle, onMarkAsFinished, onDelete, currency }) => {
   const isFinished = bottle.status === BottleStatus.FINISHED;
 
   return (
@@ -48,7 +49,7 @@ const BottleCard: React.FC<BottleCardProps> = ({ bottle, onMarkAsFinished, onDel
         </div>
         <div className="flex items-center gap-1.5">
           <DollarSign size={14} />
-          <span>${bottle.price.toFixed(2)}</span>
+          <span>{currency}{bottle.price.toFixed(2)}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Droplets size={14} />

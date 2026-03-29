@@ -1,40 +1,26 @@
 import React from 'react';
 import { Bottle, BottleStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { DollarSign, Package, CheckCircle, TrendingUp, Calendar, BarChart3 } from 'lucide-react';
-import { startOfYear, startOfMonth, isAfter, parseISO } from 'date-fns';
+import { DollarSign, Package, CheckCircle, TrendingUp, BarChart3 } from 'lucide-react';
 
 interface DashboardProps {
   bottles: Bottle[];
+  currency: string;
 }
 
-export default function Dashboard({ bottles }: DashboardProps) {
-  const now = new Date();
-  const yearStart = startOfYear(now);
-  const monthStart = startOfMonth(now);
-
+export default function Dashboard({ bottles, currency }: DashboardProps) {
   // Basic Stats
   const totalSpent = bottles.reduce((sum, b) => sum + b.price, 0);
   const totalBottles = bottles.length;
   const finishedBottles = bottles.filter((b) => b.status === BottleStatus.FINISHED).length;
   const activeBottles = totalBottles - finishedBottles;
+  const averagePrice = totalBottles > 0 ? totalSpent / totalBottles : 0;
 
-  // Time-based Stats
-  const spentThisYear = bottles
-    .filter(b => isAfter(parseISO(b.purchaseDate), yearStart))
-    .reduce((sum, b) => sum + b.price, 0);
-
-  const consumedThisYear = bottles
-    .filter(b => b.status === BottleStatus.FINISHED && b.finishedAt && isAfter(parseISO(b.finishedAt), yearStart))
-    .length;
-
-  const spentThisMonth = bottles
-    .filter(b => isAfter(parseISO(b.purchaseDate), monthStart))
-    .reduce((sum, b) => sum + b.price, 0);
-
-  const consumedThisMonth = bottles
-    .filter(b => b.status === BottleStatus.FINISHED && b.finishedAt && isAfter(parseISO(b.finishedAt), monthStart))
-    .length;
+  const getFontSize = (val: string) => {
+    if (val.length > 8) return 'text-sm';
+    if (val.length > 6) return 'text-lg';
+    return 'text-2xl';
+  };
 
   // Prepare data for chart: Spending by type
   const spendingByType = bottles.reduce((acc: any, b) => {
@@ -58,7 +44,18 @@ export default function Dashboard({ bottles }: DashboardProps) {
             <DollarSign size={16} />
             <span className="text-xs font-bold uppercase tracking-wider">Total Spent</span>
           </div>
-          <div className="text-2xl font-black text-gray-900">${totalSpent.toFixed(2)}</div>
+          <div className={`font-black text-gray-900 ${getFontSize(`${currency}${totalSpent.toFixed(2)}`)}`}>
+            {currency}{totalSpent.toFixed(2)}
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 text-blue-600 mb-1">
+            <TrendingUp size={16} />
+            <span className="text-xs font-bold uppercase tracking-wider">Avg. Price</span>
+          </div>
+          <div className={`font-black text-gray-900 ${getFontSize(`${currency}${averagePrice.toFixed(2)}`)}`}>
+            {currency}{averagePrice.toFixed(2)}
+          </div>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2 text-amber-600 mb-1">
@@ -67,53 +64,12 @@ export default function Dashboard({ bottles }: DashboardProps) {
           </div>
           <div className="text-2xl font-black text-gray-900">{activeBottles}</div>
         </div>
-      </div>
-
-      {/* Time-based Reports */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-        <div className="flex items-center gap-2 text-gray-400 mb-2">
-          <Calendar size={18} />
-          <h3 className="text-sm font-bold uppercase tracking-wider">Periodic Reports</h3>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">This Year (YTD)</p>
-              <div className="flex flex-col">
-                <span className="text-xl font-black text-red-800">${spentThisYear.toFixed(2)}</span>
-                <span className="text-xs text-gray-500 font-medium">{consumedThisYear} bottles consumed</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">This Month (MTD)</p>
-              <div className="flex flex-col">
-                <span className="text-xl font-black text-red-800">${spentThisMonth.toFixed(2)}</span>
-                <span className="text-xs text-gray-500 font-medium">{consumedThisMonth} bottles consumed</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Secondary Stats */}
-      <div className="grid grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2 text-green-600 mb-1">
             <CheckCircle size={16} />
             <span className="text-xs font-bold uppercase tracking-wider">Finished</span>
           </div>
           <div className="text-2xl font-black text-gray-900">{finishedBottles}</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 text-blue-600 mb-1">
-            <TrendingUp size={16} />
-            <span className="text-xs font-bold uppercase tracking-wider">Total Count</span>
-          </div>
-          <div className="text-2xl font-black text-gray-900">{totalBottles}</div>
         </div>
       </div>
 

@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface AddBottleFormProps {
   onAdd: (bottle: Omit<Bottle, 'id'>) => void;
+  currency: string;
 }
 
-export default function AddBottleForm({ onAdd }: AddBottleFormProps) {
+export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -89,7 +90,7 @@ export default function AddBottleForm({ onAdd }: AddBottleFormProps) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price ({currency})</label>
                 <input
                   required
                   type="number"
