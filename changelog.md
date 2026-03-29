@@ -2,6 +2,33 @@
 
 All notable changes to the **Alcohol Intake Tracker** project will be documented in this file.
 
+## [1.2.0] - 2026-03-29
+
+### Added
+- **Mood Tracker:**
+  - Added a new "Mood" tab to track daily feelings after social events.
+  - Implemented a "Mood Calculator" with a 1-5 rating system (smileys), date selection, and notes.
+  - Integrated real-time mood history with pagination (5 entries per page).
+  - Added navigation controls at both the top and bottom of the history list.
+  - Styled pagination indicators to be larger and bolder for better accessibility.
+- **Reports Enhancements:**
+  - Updated the Reports page to keep filters open by default for quicker access.
+  - Added a collapsible toggle to the filter section to maximize screen space when needed.
+  - Introduced a "Reset All" button that appears when filters are active.
+
+### Changed
+- **UI/UX Refinements:**
+  - Renamed the "Help" tab to "Help Me" in the bottom navigation.
+  - Removed confirmation dialogs for deleting bottles and clearing data to streamline the user experience.
+  - Replaced `alert()` calls with integrated UI feedback for a more polished feel.
+- **Security:**
+  - Updated Firestore rules to include the new `moods` collection with strict ownership and data validation.
+  - Ensured `uid` fields are immutable for both bottles and moods.
+
+### Fixed
+- **Add Bottle Form:**
+  - Fixed a bug where the `uid` property was being incorrectly passed from the form, ensuring cleaner data handling.
+
 ## [1.1.0] - 2026-03-29
 
 ### Added
