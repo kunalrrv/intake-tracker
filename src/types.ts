@@ -14,8 +14,18 @@ export interface Bottle {
   status: BottleStatus;
   openedAt?: string; // ISO string
   finishedAt?: string; // ISO string
+  uid: string;
+}
+
+export interface Mood {
+  id: string;
+  date: string; // YYYY-MM-DD
+  rating: number; // 1 to 5
+  note?: string;
+  uid: string;
 }
 
 export interface AlcoholIntakeState {
   bottles: Bottle[];
+  moods: Mood[];
 }

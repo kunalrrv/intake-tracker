@@ -38,10 +38,8 @@ export default function Settings({
     setIsUpdating(true);
     try {
       await onUpdateProfile(displayName, photoURL);
-      alert('Profile updated successfully!');
     } catch (error) {
       console.error('Failed to update profile', error);
-      alert('Failed to update profile.');
     } finally {
       setIsUpdating(false);
     }

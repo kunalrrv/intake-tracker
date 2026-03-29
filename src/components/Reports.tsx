@@ -31,7 +31,7 @@ interface ReportsProps {
 }
 
 export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
-  const [showFilters, setShowFilters] = React.useState(false);
+  const [showFilters, setShowFilters] = React.useState(true);
   const [filters, setFilters] = React.useState({
     month: '', // YYYY-MM
     startDate: '',
@@ -133,22 +133,28 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Reports</h2>
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
-            showFilters || activeFiltersCount > 0 
-              ? 'bg-red-800 text-white shadow-lg' 
-              : 'bg-white text-gray-600 border border-gray-100'
-          }`}
-        >
-          <Filter size={18} />
-          <span>Filters</span>
+        <div className="flex gap-2">
           {activeFiltersCount > 0 && (
-            <span className="bg-white text-red-800 text-[10px] px-1.5 py-0.5 rounded-full ml-1">
-              {activeFiltersCount}
-            </span>
+            <button 
+              onClick={resetFilters}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-800 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:bg-red-100"
+            >
+              <X size={14} />
+              <span>Reset All</span>
+            </button>
           )}
-        </button>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
+              showFilters 
+                ? 'bg-gray-100 text-gray-600' 
+                : 'bg-red-800 text-white shadow-lg'
+            }`}
+          >
+            <Filter size={18} />
+            <span className="text-xs uppercase tracking-widest">{showFilters ? 'Hide' : 'Show'} Filters</span>
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -270,16 +276,6 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <button 
-                  onClick={resetFilters}
-                  className="flex items-center gap-2 text-gray-400 hover:text-red-800 font-bold text-xs uppercase tracking-widest transition-colors"
-                >
-                  <X size={14} />
-                  <span>Reset Filters</span>
-                </button>
               </div>
             </div>
           </motion.div>

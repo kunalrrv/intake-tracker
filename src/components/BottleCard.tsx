@@ -25,21 +25,30 @@ const BottleCard: React.FC<BottleCardProps> = ({ bottle, onMarkAsFinished, onDel
       }`}
     >
       <div className="flex justify-between items-start mb-3">
-        <div>
+        <div className="flex-1 pr-2">
           <h3 className="font-semibold text-lg text-gray-900">{bottle.name}</h3>
           <span className="inline-block px-2 py-0.5 mt-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full uppercase tracking-wider">
             {bottle.type}
           </span>
         </div>
-        {!isFinished && (
+        <div className="flex items-center gap-1">
+          {!isFinished && (
+            <button
+              onClick={() => onMarkAsFinished(bottle.id)}
+              className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-colors"
+              title="Mark as Finished"
+            >
+              <CheckCircle size={20} />
+            </button>
+          )}
           <button
-            onClick={() => onMarkAsFinished(bottle.id)}
-            className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-colors"
-            title="Mark as Finished"
+            onClick={() => onDelete(bottle.id)}
+            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+            title="Delete Record"
           >
-            <CheckCircle size={20} />
+            <Trash2 size={20} />
           </button>
-        )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-sm text-gray-500">
@@ -63,12 +72,6 @@ const BottleCard: React.FC<BottleCardProps> = ({ bottle, onMarkAsFinished, onDel
         )}
       </div>
 
-      <button
-        onClick={() => onDelete(bottle.id)}
-        className="absolute top-2 right-2 p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-      >
-        <Trash2 size={16} />
-      </button>
     </motion.div>
   );
 };

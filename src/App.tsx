@@ -4,14 +4,15 @@
  */
 
 import * as React from 'react';
-import { Bottle, BottleStatus } from './types';
+import { Bottle, BottleStatus, Mood } from './types';
 import Dashboard from './components/Dashboard';
 import AddBottleForm from './components/AddBottleForm';
 import BottleCard from './components/BottleCard';
 import Reports from './components/Reports';
 import SettingsComponent from './components/Settings';
 import HelpMe from './components/HelpMe';
-import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake } from 'lucide-react';
+import MoodCalculator from './components/MoodCalculator';
+import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   auth, 
@@ -90,7 +91,8 @@ function AlcoholTrackerApp() {
   const [user, setUser] = React.useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
   const [bottles, setBottles] = React.useState<Bottle[]>([]);
-  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help'>('dashboard');
+  const [moods, setMoods] = React.useState<Mood[]>([]);
+  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help' | 'mood'>('dashboard');
   const [isLoading, setIsLoading] = React.useState(true);
   const [currency, setCurrency] = React.useState(localStorage.getItem('currency') || '$');
   
@@ -114,6 +116,7 @@ function AlcoholTrackerApp() {
       setIsAuthReady(true);
       if (!currentUser) {
         setBottles([]);
+        setMoods([]);
         setIsLoading(false);
       }
     });
@@ -134,6 +137,21 @@ function AlcoholTrackerApp() {
       setIsLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'bottles');
+    });
+
+    return () => unsubscribe();
+  }, [isAuthReady, user]);
+
+  React.useEffect(() => {
+    if (!isAuthReady || !user) return;
+
+    const q = query(collection(db, 'moods'), where('uid', '==', user.uid));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const moodsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Mood));
+      setMoods(moodsData);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'moods');
     });
 
     return () => unsubscribe();
@@ -191,9 +209,8 @@ function AlcoholTrackerApp() {
       try {
         await sendEmailVerification(auth.currentUser);
         setVerificationSent(true);
-        alert("Verification email sent!");
       } catch (error: any) {
-        alert(error.message);
+        setAuthError(error.message);
       }
     }
   };
@@ -206,7 +223,7 @@ function AlcoholTrackerApp() {
     }
   };
 
-  const handleAddBottle = async (newBottle: Omit<Bottle, 'id'>) => {
+  const handleAddBottle = async (newBottle: Omit<Bottle, 'id' | 'uid'>) => {
     if (!user) return;
     const id = crypto.randomUUID();
     const bottleWithId: Bottle = {
@@ -236,30 +253,50 @@ function AlcoholTrackerApp() {
 
   const handleDeleteBottle = async (id: string) => {
     if (!user) return;
-    if (confirm('Are you sure you want to delete this record?')) {
-      try {
-        await deleteDoc(doc(db, 'bottles', id));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `bottles/${id}`);
-      }
+    try {
+      await deleteDoc(doc(db, 'bottles', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `bottles/${id}`);
+    }
+  };
+
+  const handleAddMood = async (newMood: Omit<Mood, 'id' | 'uid'>) => {
+    if (!user) return;
+    const id = crypto.randomUUID();
+    const moodWithId: Mood = {
+      ...newMood,
+      id,
+      uid: user.uid,
+    };
+
+    try {
+      await setDoc(doc(db, 'moods', id), moodWithId);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, `moods/${id}`);
+    }
+  };
+
+  const handleDeleteMood = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'moods', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `moods/${id}`);
     }
   };
 
   const handleClearData = async () => {
     if (!user) return;
-    if (confirm('Are you absolutely sure? This will delete ALL your records permanently.')) {
-      try {
-        const q = query(collection(db, 'bottles'), where('uid', '==', user.uid));
-        const snapshot = await getDocs(q);
-        const batch = writeBatch(db);
-        snapshot.docs.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-        alert('All data cleared successfully.');
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, 'bottles/all');
-      }
+    try {
+      const q = query(collection(db, 'bottles'), where('uid', '==', user.uid));
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, 'bottles/all');
     }
   };
 
@@ -284,7 +321,7 @@ function AlcoholTrackerApp() {
         await auth.currentUser.reload();
         setUser({...auth.currentUser} as User);
       } catch (error: any) {
-        alert(error.message);
+        setAuthError(error.message);
       } finally {
         setIsAuthLoading(false);
       }
@@ -566,9 +603,14 @@ function AlcoholTrackerApp() {
                   <h2 className="text-2xl font-bold">Current Inventory</h2>
                 </div>
                 {activeBottles.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400">
-                    <Wine size={48} className="mx-auto mb-4 opacity-20" />
-                    <p>Your bar is empty. Add a bottle!</p>
+                  <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-gray-200">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Wine size={32} className="text-gray-300 opacity-50" />
+                    </div>
+                    <h3 className="text-gray-900 font-bold mb-2">Your bar is currently clear</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed max-w-[240px] mx-auto">
+                      A clear space can be a peaceful one. If you're on a journey to reduce your intake, we're here to support your mindful tracking whenever you're ready.
+                    </p>
                   </div>
                 ) : (
                   activeBottles.map((bottle) => (
@@ -654,6 +696,21 @@ function AlcoholTrackerApp() {
                 <HelpMe />
               </motion.div>
             )}
+
+            {activeTab === 'mood' && (
+              <motion.div
+                key="mood"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <MoodCalculator 
+                  moods={moods} 
+                  onAddMood={handleAddMood} 
+                  onDeleteMood={handleDeleteMood} 
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         )}
       </main>
@@ -672,6 +729,12 @@ function AlcoholTrackerApp() {
             onClick={() => setActiveTab('inventory')}
             icon={<Wine size={20} />}
             label="Bar"
+          />
+          <NavButton
+            active={activeTab === 'mood'}
+            onClick={() => setActiveTab('mood')}
+            icon={<Smile size={20} />}
+            label="Mood"
           />
           <NavButton
             active={activeTab === 'reports'}

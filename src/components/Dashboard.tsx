@@ -73,13 +73,13 @@ export default function Dashboard({ bottles, currency }: DashboardProps) {
         </div>
       </div>
 
-      {chartData.length > 0 && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 text-gray-400 mb-4">
-            <BarChart3 size={18} />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Spending by Type</h3>
-          </div>
-          <div className="h-48 w-full">
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-2 text-gray-400 mb-4">
+          <BarChart3 size={18} />
+          <h3 className="text-sm font-bold uppercase tracking-wider">Spending by Type</h3>
+        </div>
+        <div className="h-48 w-full">
+          {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -105,9 +105,14 @@ export default function Dashboard({ bottles, currency }: DashboardProps) {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-gray-300">
+              <BarChart3 size={32} className="mb-2 opacity-20" />
+              <p className="text-[10px] font-bold uppercase tracking-widest">No data to display</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

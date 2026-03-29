@@ -5,7 +5,7 @@ import { Plus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AddBottleFormProps {
-  onAdd: (bottle: Omit<Bottle, 'id'>) => void;
+  onAdd: (bottle: Omit<Bottle, 'id' | 'uid'>) => void;
   currency: string;
 }
 

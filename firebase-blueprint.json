@@ -17,12 +17,29 @@
         "uid": { "type": "string", "description": "UID of the owner" }
       },
       "required": ["id", "name", "type", "purchaseDate", "price", "volume", "status", "uid"]
+    },
+    "Mood": {
+      "title": "Mood",
+      "description": "A user's mood entry for a specific date.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the mood entry" },
+        "date": { "type": "string", "format": "date", "description": "Date of the mood entry" },
+        "rating": { "type": "integer", "description": "Mood rating from 1 (bad) to 5 (good)" },
+        "note": { "type": "string", "description": "Optional note about the mood" },
+        "uid": { "type": "string", "description": "UID of the owner" }
+      },
+      "required": ["id", "date", "rating", "uid"]
     }
   },
   "firestore": {
     "/bottles/{bottleId}": {
       "schema": "Bottle",
       "description": "Collection of alcohol bottles tracked by users."
+    },
+    "/moods/{moodId}": {
+      "schema": "Mood",
+      "description": "Collection of user mood entries."
     }
   }
 }

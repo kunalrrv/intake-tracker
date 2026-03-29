@@ -20,6 +20,15 @@ service cloud.firestore {
     //   - finishedAt: string (optional, ISO 8601)
     //   - uid: string (required, immutable) - UID of the owner
     //
+    // Collection: moods
+    // Document ID: {moodId}
+    // Fields:
+    //   - id: string (required) - Unique ID for the mood entry
+    //   - date: string (required, YYYY-MM-DD) - Date of the mood entry
+    //   - rating: integer (required, 1-5) - Mood rating
+    //   - note: string (optional, maxLen: 500) - Optional note
+    //   - uid: string (required, immutable) - UID of the owner
+    //
     // ===============================================================
 
     // ===============================================================
@@ -94,6 +103,16 @@ service cloud.firestore {
              data.uid == request.auth.uid;
     }
 
+    function isValidMood(data) {
+      return hasRequiredFields(['id', 'date', 'rating', 'uid']) &&
+             hasOnlyAllowedFields(['id', 'date', 'rating', 'uid', 'note']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+             (!('note' in data) || (data.note is string && data.note.size() <= 500)) &&
+             data.uid == request.auth.uid;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -102,6 +121,13 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
       allow create: if isAuthenticated() && isValidBottle(request.resource.data) && uidUnchanged();
       allow update: if isAuthenticated() && isDocOwner() && isValidBottle(request.resource.data) && uidNotModified();
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /moods/{moodId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidMood(request.resource.data) && uidUnchanged();
+      allow update: if isAuthenticated() && isDocOwner() && isValidMood(request.resource.data) && uidNotModified();
       allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
     }
 
