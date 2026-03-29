@@ -93,7 +93,6 @@ function AlcoholTrackerApp() {
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help'>('dashboard');
   const [isLoading, setIsLoading] = React.useState(true);
   const [currency, setCurrency] = React.useState(localStorage.getItem('currency') || '$');
-  const [theme, setTheme] = React.useState<'light' | 'dark'>((localStorage.getItem('theme') as 'light' | 'dark') || 'light');
   
   // Auth state
   const [authMode, setAuthMode] = React.useState<'login' | 'register'>('login');
@@ -104,11 +103,6 @@ function AlcoholTrackerApp() {
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = React.useState(false);
   const [verificationSent, setVerificationSent] = React.useState(false);
-
-  React.useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
-  }, [theme]);
 
   React.useEffect(() => {
     localStorage.setItem('currency', currency);
@@ -617,8 +611,6 @@ function AlcoholTrackerApp() {
                   onClearData={handleClearData}
                   currency={currency}
                   onCurrencyChange={setCurrency}
-                  theme={theme}
-                  onThemeToggle={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
                   onUpdateProfile={handleUpdateProfile}
                 />
               </motion.div>

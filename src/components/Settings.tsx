@@ -2,10 +2,7 @@ import React from 'react';
 import { User } from 'firebase/auth';
 import { 
   User as UserIcon, 
-  DollarSign, 
   Database, 
-  Moon, 
-  Sun, 
   Download, 
   Trash2, 
   Save,
@@ -21,8 +18,6 @@ interface SettingsProps {
   onClearData: () => Promise<void>;
   currency: string;
   onCurrencyChange: (currency: string) => void;
-  theme: 'light' | 'dark';
-  onThemeToggle: () => void;
   onUpdateProfile: (displayName: string, photoURL: string) => Promise<void>;
 }
 
@@ -32,8 +27,6 @@ export default function Settings({
   onClearData, 
   currency, 
   onCurrencyChange, 
-  theme, 
-  onThemeToggle,
   onUpdateProfile
 }: SettingsProps) {
   const [displayName, setDisplayName] = React.useState(user.displayName || '');
@@ -142,22 +135,6 @@ export default function Settings({
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {theme === 'dark' ? <Moon className="text-gray-600" size={20} /> : <Sun className="text-amber-500" size={20} />}
-              <div>
-                <p className="text-sm font-bold text-gray-900">Dark Mode</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase">Toggle dark theme</p>
-              </div>
-            </div>
-            <button 
-              onClick={onThemeToggle}
-              className={`w-12 h-6 rounded-full transition-colors relative ${theme === 'dark' ? 'bg-red-800' : 'bg-gray-200'}`}
-            >
-              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'left-7' : 'left-1'}`} />
-            </button>
-          </div>
-
           <div className="space-y-1 pt-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Currency Symbol</label>
             <div className="grid grid-cols-3 gap-2">
