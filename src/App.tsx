@@ -689,7 +689,7 @@ function AlcoholTrackerApp() {
             active={activeTab === 'help'}
             onClick={() => setActiveTab('help')}
             icon={<HeartHandshake size={20} />}
-            label="Help"
+            label="Help Me"
           />
         </div>
       </nav>
