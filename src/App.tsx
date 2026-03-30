@@ -12,7 +12,7 @@ import Reports from './components/Reports';
 import SettingsComponent from './components/Settings';
 import HelpMe from './components/HelpMe';
 import MoodCalculator from './components/MoodCalculator';
-import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake, Smile } from 'lucide-react';
+import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   auth, 
@@ -93,6 +93,8 @@ function AlcoholTrackerApp() {
   const [bottles, setBottles] = React.useState<Bottle[]>([]);
   const [moods, setMoods] = React.useState<Mood[]>([]);
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help' | 'mood'>('dashboard');
+  const [inventoryPage, setInventoryPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 5;
   const [isLoading, setIsLoading] = React.useState(true);
   const [currency, setCurrency] = React.useState(localStorage.getItem('currency') || '$');
   
@@ -530,6 +532,8 @@ function AlcoholTrackerApp() {
   }
 
   const activeBottles = bottles.filter((b) => b.status !== BottleStatus.FINISHED);
+  const totalInventoryPages = Math.ceil(activeBottles.length / ITEMS_PER_PAGE);
+  const paginatedInventory = activeBottles.slice((inventoryPage - 1) * ITEMS_PER_PAGE, inventoryPage * ITEMS_PER_PAGE);
   const historyBottles = bottles.filter((b) => b.status === BottleStatus.FINISHED);
 
   return (
@@ -586,8 +590,8 @@ function AlcoholTrackerApp() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <Dashboard bottles={bottles} currency={currency} />
                 <AddBottleForm onAdd={handleAddBottle} currency={currency} />
+                <Dashboard bottles={bottles} moods={moods} currency={currency} />
               </motion.div>
             )}
 
@@ -601,6 +605,27 @@ function AlcoholTrackerApp() {
               >
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">Current Inventory</h2>
+                  {totalInventoryPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setInventoryPage(p => Math.max(1, p - 1))}
+                        disabled={inventoryPage === 1}
+                        className="p-1 text-gray-400 hover:text-red-800 disabled:opacity-20"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <span className="text-sm font-bold text-gray-600">
+                        {inventoryPage} / {totalInventoryPages}
+                      </span>
+                      <button 
+                        onClick={() => setInventoryPage(p => Math.min(totalInventoryPages, p + 1))}
+                        disabled={inventoryPage === totalInventoryPages}
+                        className="p-1 text-gray-400 hover:text-red-800 disabled:opacity-20"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 {activeBottles.length === 0 ? (
                   <div className="text-center py-12 px-6 bg-white rounded-3xl border border-dashed border-gray-200">
@@ -613,15 +638,61 @@ function AlcoholTrackerApp() {
                     </p>
                   </div>
                 ) : (
-                  activeBottles.map((bottle) => (
-                    <BottleCard
-                      key={bottle.id}
-                      bottle={bottle}
-                      onMarkAsFinished={handleMarkAsFinished}
-                      onDelete={handleDeleteBottle}
-                      currency={currency}
-                    />
-                  ))
+                  <>
+                    <div className="space-y-4">
+                      <AnimatePresence mode="popLayout">
+                        {paginatedInventory.map((bottle) => (
+                          <motion.div
+                            layout
+                            key={bottle.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                          >
+                            <BottleCard
+                              bottle={bottle}
+                              onMarkAsFinished={handleMarkAsFinished}
+                              onDelete={handleDeleteBottle}
+                              currency={currency}
+                            />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Bottom Pagination */}
+                    {totalInventoryPages > 1 && (
+                      <div className="flex justify-center items-center gap-4 pt-4">
+                        <button 
+                          onClick={() => {
+                            setInventoryPage(p => Math.max(1, p - 1));
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          disabled={inventoryPage === 1}
+                          className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-red-800 hover:border-red-100 transition-all disabled:opacity-20 shadow-sm"
+                        >
+                          <ChevronLeft size={18} />
+                          <span className="text-xs font-bold uppercase tracking-widest">Prev</span>
+                        </button>
+                        
+                        <span className="text-sm font-bold text-gray-600 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                          {inventoryPage} / {totalInventoryPages}
+                        </span>
+                        
+                        <button 
+                          onClick={() => {
+                            setInventoryPage(p => Math.min(totalInventoryPages, p + 1));
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          disabled={inventoryPage === totalInventoryPages}
+                          className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-red-800 hover:border-red-100 transition-all disabled:opacity-20 shadow-sm"
+                        >
+                          <span className="text-xs font-bold uppercase tracking-widest">Next</span>
+                          <ChevronRight size={18} />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="pt-4">
                   <AddBottleForm onAdd={handleAddBottle} currency={currency} />

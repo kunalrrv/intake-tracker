@@ -20,9 +20,13 @@ import {
   BarChart3,
   TrendingDown,
   Zap,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+const ITEMS_PER_PAGE = 5;
 
 interface ReportsProps {
   bottles: Bottle[];
@@ -32,6 +36,7 @@ interface ReportsProps {
 
 export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
   const [showFilters, setShowFilters] = React.useState(true);
+  const [currentPage, setCurrentPage] = React.useState(1);
   const [filters, setFilters] = React.useState({
     month: '', // YYYY-MM
     startDate: '',
@@ -99,6 +104,12 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
       minPrice: '',
       maxPrice: ''
     });
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+    setCurrentPage(1);
   };
 
   const setQuickFilter = (type: 'this-month' | 'last-month' | 'this-year') => {
@@ -128,6 +139,9 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
       label: format(d, 'MMMM yyyy')
     };
   });
+
+  const totalPages = Math.ceil(filteredBottles.length / ITEMS_PER_PAGE);
+  const paginatedBottles = filteredBottles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
@@ -201,7 +215,7 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                   <div className="relative">
                     <select
                       value={filters.month}
-                      onChange={(e) => setFilters({ ...filters, month: e.target.value })}
+                      onChange={(e) => handleFilterChange({ month: e.target.value })}
                       className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 appearance-none focus:ring-2 focus:ring-red-800/20"
                     >
                       <option value="">All Months</option>
@@ -219,7 +233,7 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                   <div className="relative">
                     <select
                       value={filters.type}
-                      onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                      onChange={(e) => handleFilterChange({ type: e.target.value })}
                       className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 appearance-none focus:ring-2 focus:ring-red-800/20"
                     >
                       <option value="">All Types</option>
@@ -238,13 +252,13 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                     <input
                       type="date"
                       value={filters.startDate}
-                      onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                      onChange={(e) => handleFilterChange({ startDate: e.target.value })}
                       className="w-1/2 bg-gray-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-red-800/20 text-sm"
                     />
                     <input
                       type="date"
                       value={filters.endDate}
-                      onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                      onChange={(e) => handleFilterChange({ endDate: e.target.value })}
                       className="w-1/2 bg-gray-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-red-800/20 text-sm"
                     />
                   </div>
@@ -260,7 +274,7 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                         type="number"
                         placeholder="Min"
                         value={filters.minPrice}
-                        onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+                        onChange={(e) => handleFilterChange({ minPrice: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 pl-8 pr-4 focus:ring-2 focus:ring-red-800/20 text-sm"
                       />
                     </div>
@@ -270,7 +284,7 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                         type="number"
                         placeholder="Max"
                         value={filters.maxPrice}
-                        onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+                        onChange={(e) => handleFilterChange({ maxPrice: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 pl-8 pr-4 focus:ring-2 focus:ring-red-800/20 text-sm"
                       />
                     </div>
@@ -327,42 +341,108 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
 
       {/* List of filtered items */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 px-1">Detailed List ({filteredBottles.length})</h3>
+        <div className="flex justify-between items-center px-1">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Detailed Section ({filteredBottles.length})</h3>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1 text-gray-400 hover:text-red-800 disabled:opacity-20"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <span className="text-sm font-bold text-gray-600">
+                {currentPage} / {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1 text-gray-400 hover:text-red-800 disabled:opacity-20"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+        </div>
+
         {filteredBottles.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
             <p>No bottles match your filters.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredBottles.map(bottle => (
-              <div key={bottle.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
-                <div>
-                  <h4 className="font-bold text-gray-900">{bottle.name}</h4>
-                  <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-wider mt-0.5">
-                    <span>{bottle.type}</span>
-                    <span>•</span>
-                    <span>{format(parseISO(bottle.purchaseDate), 'MMM d, yyyy')}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="font-black text-red-800">{currency}{bottle.price.toFixed(2)}</div>
-                    <div className={`text-[9px] font-bold uppercase tracking-widest mt-1 px-2 py-0.5 rounded-full inline-block ${
-                      bottle.status === BottleStatus.FINISHED ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
-                    }`}>
-                      {bottle.status}
+            <AnimatePresence mode="popLayout">
+              {paginatedBottles.map(bottle => (
+                <motion.div 
+                  layout
+                  key={bottle.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center"
+                >
+                  <div>
+                    <h4 className="font-bold text-gray-900">{bottle.name}</h4>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-wider mt-0.5">
+                      <span>{bottle.type}</span>
+                      <span>•</span>
+                      <span>{format(parseISO(bottle.purchaseDate), 'MMM d, yyyy')}</span>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => onDelete(bottle.id)}
-                    className="p-2 text-gray-300 hover:text-red-600 transition-colors"
-                    title="Delete Bottle"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="font-black text-red-800">{currency}{bottle.price.toFixed(2)}</div>
+                      <div className={`text-[9px] font-bold uppercase tracking-widest mt-1 px-2 py-0.5 rounded-full inline-block ${
+                        bottle.status === BottleStatus.FINISHED ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                      }`}>
+                        {bottle.status}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => onDelete(bottle.id)}
+                      className="p-2 text-gray-300 hover:text-red-600 transition-colors"
+                      title="Delete Bottle"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Bottom Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 pt-4">
+            <button 
+              onClick={() => {
+                setCurrentPage(p => Math.max(1, p - 1));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-red-800 hover:border-red-100 transition-all disabled:opacity-20 shadow-sm"
+            >
+              <ChevronLeft size={18} />
+              <span className="text-xs font-bold uppercase tracking-widest">Prev</span>
+            </button>
+            
+            <span className="text-sm font-bold text-gray-600 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+              {currentPage} / {totalPages}
+            </span>
+            
+            <button 
+              onClick={() => {
+                setCurrentPage(p => Math.min(totalPages, p + 1));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-red-800 hover:border-red-100 transition-all disabled:opacity-20 shadow-sm"
+            >
+              <span className="text-xs font-bold uppercase tracking-widest">Next</span>
+              <ChevronRight size={18} />
+            </button>
           </div>
         )}
       </div>

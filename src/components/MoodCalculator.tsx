@@ -13,7 +13,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface MoodCalculatorProps {
   moods: Mood[];
@@ -56,6 +57,22 @@ export default function MoodCalculator({ moods, onAddMood, onDeleteMood }: MoodC
   const sortedMoods = [...moods].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const totalPages = Math.ceil(sortedMoods.length / ITEMS_PER_PAGE);
   const paginatedMoods = sortedMoods.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  // Prepare data for mood chart: Last 10 days
+  const last10Days = Array.from({ length: 10 }).map((_, i) => {
+    const date = subDays(new Date(), 9 - i);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    const dayMoods = moods.filter(m => m.date === dateStr);
+    const avgRating = dayMoods.length > 0 
+      ? dayMoods.reduce((sum, m) => sum + m.rating, 0) / dayMoods.length 
+      : null;
+
+    return {
+      date: format(date, 'MMM d'),
+      rating: avgRating,
+    };
+  });
 
   return (
     <div className="space-y-8 pb-12">
@@ -127,6 +144,53 @@ export default function MoodCalculator({ moods, onAddMood, onDeleteMood }: MoodC
           </button>
         </form>
       </motion.section>
+
+      {/* Mood Chart */}
+      <section className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 text-gray-400">
+          <Smile size={18} />
+          <h3 className="text-sm font-bold uppercase tracking-wider">Mood Trends (Last 10 Days)</h3>
+        </div>
+        <div className="h-48 w-full">
+          {moods.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={last10Days}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                />
+                <YAxis 
+                  domain={[1, 5]}
+                  ticks={[1, 2, 3, 4, 5]}
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="rating" 
+                  stroke="#8B0000" 
+                  strokeWidth={3}
+                  dot={{ fill: '#8B0000', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-gray-300">
+              <Smile size={32} className="mb-2 opacity-20" />
+              <p className="text-[10px] font-bold uppercase tracking-widest">No mood data available</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Mood History */}
       <section className="space-y-4">

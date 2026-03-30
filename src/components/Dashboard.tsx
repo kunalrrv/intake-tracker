@@ -1,14 +1,16 @@
 import React from 'react';
-import { Bottle, BottleStatus } from '../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { DollarSign, Package, CheckCircle, TrendingUp, BarChart3 } from 'lucide-react';
+import { Bottle, BottleStatus, Mood } from '../types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
+import { DollarSign, Package, CheckCircle, TrendingUp, BarChart3, Smile } from 'lucide-react';
+import { format, subDays, parseISO, isSameDay } from 'date-fns';
 
 interface DashboardProps {
   bottles: Bottle[];
+  moods: Mood[];
   currency: string;
 }
 
-export default function Dashboard({ bottles, currency }: DashboardProps) {
+export default function Dashboard({ bottles, moods, currency }: DashboardProps) {
   // Basic Stats
   const totalSpent = bottles.reduce((sum, b) => sum + b.price, 0);
   const totalBottles = bottles.length;
@@ -34,6 +36,22 @@ export default function Dashboard({ bottles, currency }: DashboardProps) {
   }));
 
   const COLORS = ['#8B0000', '#D4AF37', '#5A5A40', '#151619', '#F27D26', '#00FF00', '#FF4444', '#000000'];
+
+  // Prepare data for mood chart: Last 10 days
+  const last10Days = Array.from({ length: 10 }).map((_, i) => {
+    const date = subDays(new Date(), 9 - i);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    const dayMoods = moods.filter(m => m.date === dateStr);
+    const avgRating = dayMoods.length > 0 
+      ? dayMoods.reduce((sum, m) => sum + m.rating, 0) / dayMoods.length 
+      : null;
+
+    return {
+      date: format(date, 'MMM d'),
+      rating: avgRating,
+    };
+  });
 
   return (
     <div className="space-y-6 mb-8">
@@ -109,6 +127,51 @@ export default function Dashboard({ bottles, currency }: DashboardProps) {
             <div className="h-full flex flex-col items-center justify-center text-gray-300">
               <BarChart3 size={32} className="mb-2 opacity-20" />
               <p className="text-[10px] font-bold uppercase tracking-widest">No data to display</p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-2 text-gray-400 mb-4">
+          <Smile size={18} />
+          <h3 className="text-sm font-bold uppercase tracking-wider">Mood History (Last 10 Days)</h3>
+        </div>
+        <div className="h-48 w-full">
+          {moods.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={last10Days}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                />
+                <YAxis 
+                  domain={[1, 5]}
+                  ticks={[1, 2, 3, 4, 5]}
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="rating" 
+                  stroke="#8B0000" 
+                  strokeWidth={3}
+                  dot={{ fill: '#8B0000', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-gray-300">
+              <Smile size={32} className="mb-2 opacity-20" />
+              <p className="text-[10px] font-bold uppercase tracking-widest">No mood data available</p>
             </div>
           )}
         </div>
