@@ -108,6 +108,20 @@ function AlcoholTrackerApp() {
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = React.useState(false);
   const [verificationSent, setVerificationSent] = React.useState(false);
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   React.useEffect(() => {
     localStorage.setItem('currency', currency);
@@ -304,6 +318,21 @@ function AlcoholTrackerApp() {
       await batch.commit();
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, 'bottles/all');
+    }
+  };
+
+  const handleImportData = async (importedBottles: Bottle[]) => {
+    if (!user) return;
+    try {
+      const batch = writeBatch(db);
+      importedBottles.forEach((bottle) => {
+        const newBottle = { ...bottle, uid: user.uid };
+        const docRef = doc(collection(db, 'bottles'), newBottle.id);
+        batch.set(docRef, newBottle);
+      });
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'bottles/import');
     }
   };
 
@@ -730,9 +759,12 @@ function AlcoholTrackerApp() {
                   user={user} 
                   bottles={bottles} 
                   onClearData={handleClearData}
+                  onImportData={handleImportData}
                   currency={currency}
                   onCurrencyChange={setCurrency}
                   onUpdateProfile={handleUpdateProfile}
+                  deferredPrompt={deferredPrompt}
+                  setDeferredPrompt={setDeferredPrompt}
                 />
               </motion.div>
             )}

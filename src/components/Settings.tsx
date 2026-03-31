@@ -4,10 +4,12 @@ import {
   User as UserIcon, 
   Database, 
   Download, 
+  Upload,
   Trash2, 
   Save,
   Globe,
-  Camera
+  Camera,
+  Smartphone
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Bottle } from '../types';
@@ -16,24 +18,31 @@ interface SettingsProps {
   user: User;
   bottles: Bottle[];
   onClearData: () => Promise<void>;
+  onImportData?: (data: Bottle[]) => Promise<void>;
   currency: string;
   onCurrencyChange: (currency: string) => void;
   onUpdateProfile: (displayName: string, photoURL: string) => Promise<void>;
+  deferredPrompt?: any;
+  setDeferredPrompt?: (prompt: any) => void;
 }
 
 export default function Settings({ 
   user, 
   bottles, 
   onClearData, 
+  onImportData,
   currency, 
   onCurrencyChange, 
-  onUpdateProfile
+  onUpdateProfile,
+  deferredPrompt,
+  setDeferredPrompt
 }: SettingsProps) {
   const [displayName, setDisplayName] = React.useState(user.displayName || '');
   const [photoURL, setPhotoURL] = React.useState(user.photoURL || '');
   const [isUpdating, setIsUpdating] = React.useState(false);
   const [updateMessage, setUpdateMessage] = React.useState<{type: 'success' | 'error', text: string} | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileImportRef = React.useRef<HTMLInputElement>(null);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +97,28 @@ export default function Settings({
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onImportData) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        if (Array.isArray(data)) {
+          await onImportData(data);
+          alert('Data imported successfully!');
+        } else {
+          alert('Invalid data format. Expected an array of bottles.');
+        }
+      } catch (error) {
+        alert('Failed to parse the file. Please ensure it is a valid JSON export.');
+      }
+      if (fileImportRef.current) fileImportRef.current.value = '';
+    };
+    reader.readAsText(file);
   };
 
   const handleExportData = () => {
@@ -217,6 +248,51 @@ export default function Settings({
         </div>
       </section>
 
+      {/* App Installation Section */}
+      <section className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+        <div className="flex items-center gap-2 text-indigo-600">
+          <Smartphone size={20} />
+          <h3 className="text-sm font-bold uppercase tracking-widest">App Installation</h3>
+        </div>
+
+        <div className="space-y-3">
+          {deferredPrompt ? (
+            <button 
+              onClick={async () => {
+                if (deferredPrompt) {
+                  deferredPrompt.prompt();
+                  const { outcome } = await deferredPrompt.userChoice;
+                  if (outcome === 'accepted') {
+                    if (setDeferredPrompt) setDeferredPrompt(null);
+                  }
+                }
+              }}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-indigo-50 rounded-2xl transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <Smartphone className="text-indigo-600" size={20} />
+                <div className="text-left">
+                  <p className="text-sm font-bold text-gray-900">Install App</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Add to your home screen</p>
+                </div>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+                <Download size={14} />
+              </div>
+            </button>
+          ) : (
+            <div className="p-4 bg-gray-50 rounded-2xl text-sm text-gray-600">
+              <p className="font-bold text-gray-900 mb-1">How to install on your device:</p>
+              <ul className="list-disc pl-5 space-y-1 text-xs">
+                <li><strong>iOS (Safari):</strong> Tap the Share button (<span className="text-xl leading-none inline-block align-middle">⍗</span>) and select "Add to Home Screen".</li>
+                <li><strong>Android (Chrome):</strong> Tap the menu (⋮) and select "Install app" or "Add to Home screen".</li>
+                <li><strong>Desktop:</strong> Look for the install icon (⤓) in your browser's address bar.</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Data Management Section */}
       <section className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
         <div className="flex items-center gap-2 text-blue-600">
@@ -238,6 +314,29 @@ export default function Settings({
             </div>
             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-110 transition-transform">
               <Download size={14} />
+            </div>
+          </button>
+
+          <input
+            type="file"
+            accept=".json"
+            ref={fileImportRef}
+            onChange={handleImportFileChange}
+            className="hidden"
+          />
+          <button 
+            onClick={() => fileImportRef.current?.click()}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-green-50 rounded-2xl transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <Upload className="text-green-600" size={20} />
+              <div className="text-left">
+                <p className="text-sm font-bold text-gray-900">Import Data</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase">Restore from JSON</p>
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm group-hover:scale-110 transition-transform">
+              <Upload size={14} />
             </div>
           </button>
 
