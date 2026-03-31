@@ -2,6 +2,12 @@
 
 All notable changes to the **Alcohol Intake Tracker** project will be documented in this file.
 
+## [1.3.0] - 2026-03-30
+
+### Added
+- **Global Immediate Help:** Extracted the "Need immediate help?" section into a standalone component and added it to the bottom of all pages.
+- **Auto-Scroll Behavior:** Added automatic scroll-to-top functionality when switching between tabs/pages for better navigation focus.
+
 ## [1.2.0] - 2026-03-29
 
 ### Added

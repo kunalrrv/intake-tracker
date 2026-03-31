@@ -32,17 +32,62 @@ export default function Settings({
   const [displayName, setDisplayName] = React.useState(user.displayName || '');
   const [photoURL, setPhotoURL] = React.useState(user.photoURL || '');
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [updateMessage, setUpdateMessage] = React.useState<{type: 'success' | 'error', text: string} | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
+    setUpdateMessage(null);
     try {
       await onUpdateProfile(displayName, photoURL);
-    } catch (error) {
+      setUpdateMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setTimeout(() => setUpdateMessage(null), 3000);
+    } catch (error: any) {
       console.error('Failed to update profile', error);
+      setUpdateMessage({ type: 'error', text: error.message || 'Failed to update profile. Image might be too large.' });
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 72;
+        const MAX_HEIGHT = 72;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL('image/webp', 0.5);
+        setPhotoURL(dataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleExportData = () => {
@@ -78,18 +123,28 @@ export default function Settings({
 
         <form onSubmit={handleUpdateProfile} className="space-y-4">
           <div className="flex flex-col items-center gap-4 mb-4">
-            <div className="relative group">
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <img 
                 src={photoURL || `https://ui-avatars.com/api/?name=${displayName}&background=random`} 
                 alt="Profile" 
                 className="w-24 h-24 rounded-full object-cover border-4 border-gray-50 shadow-md"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+              <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                 <Camera className="text-white" size={24} />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tap image to change (URL only)</p>
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleImageUpload} 
+            />
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tap image to upload or paste URL below</p>
           </div>
 
           <div className="space-y-1">
@@ -122,6 +177,14 @@ export default function Settings({
             <Save size={18} />
             <span>{isUpdating ? 'Saving...' : 'Save Profile'}</span>
           </button>
+
+          {updateMessage && (
+            <div className={`p-3 rounded-xl text-sm font-bold text-center ${
+              updateMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+            }`}>
+              {updateMessage.text}
+            </div>
+          )}
         </form>
       </section>
 
@@ -195,11 +258,6 @@ export default function Settings({
           </button>
         </div>
       </section>
-
-      <div className="text-center pt-4">
-        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Intake Tracker v1.2.0</p>
-        <p className="text-[9px] text-gray-300 mt-1 uppercase tracking-tighter">Built with care for your bar</p>
-      </div>
     </div>
   );
 }

@@ -1,21 +1,38 @@
 {
-  "name": "Intake Tracker",
-  "short_name": "Intake",
-  "description": "Track your alcohol purchases and consumption.",
-  "start_url": "/",
+  "name": "Mindful Intake Tracker",
+  "short_name": "Mindful",
+  "description": "A mindful approach to tracking alcohol purchases, spending, and consumption patterns.",
+  "id": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#991b1b",
+  "categories": ["lifestyle", "health", "finance"],
   "icons": [
     {
       "src": "https://picsum.photos/seed/wine/192/192",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "https://picsum.photos/seed/wine/512/512",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add New Bottle",
+      "url": "/?action=add",
+      "description": "Quickly add a new bottle to your inventory"
+    },
+    {
+      "name": "View Reports",
+      "url": "/?tab=reports",
+      "description": "Check your spending and consumption reports"
     }
   ]
 }

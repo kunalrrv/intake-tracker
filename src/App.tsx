@@ -12,6 +12,7 @@ import Reports from './components/Reports';
 import SettingsComponent from './components/Settings';
 import HelpMe from './components/HelpMe';
 import MoodCalculator from './components/MoodCalculator';
+import ImmediateHelp from './components/ImmediateHelp';
 import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -111,6 +112,10 @@ function AlcoholTrackerApp() {
   React.useEffect(() => {
     localStorage.setItem('currency', currency);
   }, [currency]);
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -429,6 +434,9 @@ function AlcoholTrackerApp() {
                     placeholder="••••••••"
                   />
                 </div>
+                <p className="text-xs text-gray-500 text-center pt-2">
+                  Please check your spam/junk folder for the email verification email.
+                </p>
               </div>
             )}
 
@@ -784,6 +792,12 @@ function AlcoholTrackerApp() {
             )}
           </AnimatePresence>
         )}
+        
+        <ImmediateHelp />
+        
+        <div className="text-center pt-8 pb-4">
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Intake Tracker v1.2.0</p>
+        </div>
       </main>
 
       {/* Bottom Navigation */}
