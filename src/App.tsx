@@ -13,6 +13,7 @@ import SettingsComponent from './components/Settings';
 import HelpMe from './components/HelpMe';
 import MoodCalculator from './components/MoodCalculator';
 import ImmediateHelp from './components/ImmediateHelp';
+import VolumeHistoryChart from './components/VolumeHistoryChart';
 import { Wine, History, LayoutDashboard, Settings, LogIn, LogOut, AlertCircle, BarChart3, HeartHandshake, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -29,7 +30,7 @@ import {
   signInWithEmailAndPassword,
   sendEmailVerification
 } from './firebase';
-import { Mail, Lock, User as UserIcon, ArrowRight, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowRight, RefreshCw, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
 
 // Error Boundary Component
@@ -104,6 +105,8 @@ function AlcoholTrackerApp() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [displayName, setDisplayName] = React.useState('');
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = React.useState(false);
@@ -440,12 +443,19 @@ function AlcoholTrackerApp() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input 
                   required
-                  type="password" 
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-50 border-none rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-red-800/20"
+                  className="w-full bg-gray-50 border-none rounded-xl py-3 pl-10 pr-10 focus:ring-2 focus:ring-red-800/20"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
@@ -456,12 +466,19 @@ function AlcoholTrackerApp() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input 
                     required
-                    type="password" 
+                    type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-gray-50 border-none rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-red-800/20"
+                    className="w-full bg-gray-50 border-none rounded-xl py-3 pl-10 pr-10 focus:ring-2 focus:ring-red-800/20"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 <p className="text-xs text-gray-500 text-center pt-2">
                   Please check your spam/junk folder for the email verification email.
@@ -733,6 +750,9 @@ function AlcoholTrackerApp() {
                 )}
                 <div className="pt-4">
                   <AddBottleForm onAdd={handleAddBottle} currency={currency} />
+                </div>
+                <div className="pt-4">
+                  <VolumeHistoryChart bottles={bottles} />
                 </div>
               </motion.div>
             )}

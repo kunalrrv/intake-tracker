@@ -3,6 +3,7 @@ import { Bottle, BottleStatus, Mood } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
 import { DollarSign, Package, CheckCircle, TrendingUp, BarChart3, Smile } from 'lucide-react';
 import { format, subDays, parseISO, isSameDay } from 'date-fns';
+import VolumeHistoryChart from './VolumeHistoryChart';
 
 interface DashboardProps {
   bottles: Bottle[];
@@ -131,6 +132,9 @@ export default function Dashboard({ bottles, moods, currency }: DashboardProps) 
           )}
         </div>
       </div>
+      
+      <VolumeHistoryChart bottles={bottles} />
+
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex items-center gap-2 text-gray-400 mb-4">
           <Smile size={18} />

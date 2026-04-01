@@ -245,7 +245,7 @@ export default function MoodCalculator({ moods, onAddMood, onDeleteMood }: MoodC
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            {format(new Date(mood.date), 'EEEE, MMM d')}
+                            {format(new Date(mood.date.split('T')[0] + 'T12:00:00'), 'EEEE, MMM d')}
                           </p>
                           <h4 className={`font-bold ${option?.color}`}>{option?.label}</h4>
                         </div>

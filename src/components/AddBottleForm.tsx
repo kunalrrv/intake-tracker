@@ -3,6 +3,7 @@ import { ALCOHOL_TYPES } from '../constants';
 import { Bottle, BottleStatus } from '../types';
 import { Plus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { format } from 'date-fns';
 
 interface AddBottleFormProps {
   onAdd: (bottle: Omit<Bottle, 'id' | 'uid'>) => void;
@@ -18,7 +19,7 @@ export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
     type: 'Beer',
     price: '',
     volume: '750',
-    purchaseDate: new Date().toISOString().split('T')[0],
+    purchaseDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
       type: formData.type,
       price: parseFloat(formData.price) || 0,
       volume: parseInt(formData.volume) || 0,
-      purchaseDate: new Date(formData.purchaseDate).toISOString(),
+      purchaseDate: new Date(`${formData.purchaseDate}T12:00:00`).toISOString(),
       status: BottleStatus.UNOPENED,
     });
     setFormData({
@@ -47,7 +48,7 @@ export default function AddBottleForm({ onAdd, currency }: AddBottleFormProps) {
       type: 'Beer',
       price: '',
       volume: '750',
-      purchaseDate: new Date().toISOString().split('T')[0],
+      purchaseDate: format(new Date(), 'yyyy-MM-dd'),
     });
     setIsOpen(false);
   };

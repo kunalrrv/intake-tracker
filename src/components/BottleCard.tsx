@@ -54,7 +54,7 @@ const BottleCard: React.FC<BottleCardProps> = ({ bottle, onMarkAsFinished, onDel
       <div className="grid grid-cols-2 gap-3 text-sm text-gray-500">
         <div className="flex items-center gap-1.5">
           <Calendar size={14} />
-          <span>{format(new Date(bottle.purchaseDate), 'MMM d, yyyy')}</span>
+          <span>{format(new Date(bottle.purchaseDate.split('T')[0] + 'T12:00:00'), 'MMM d, yyyy')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <DollarSign size={14} />

@@ -55,7 +55,7 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
   const types = Array.from(new Set(bottles.map(b => b.type))).sort();
   
   const filteredBottles = bottles.filter(bottle => {
-    const purchaseDate = parseISO(bottle.purchaseDate);
+    const purchaseDate = new Date(bottle.purchaseDate.split('T')[0] + 'T12:00:00');
     
     // Month filter
     if (filters.month) {
@@ -67,8 +67,8 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
 
     // Date range filter
     if (filters.startDate || filters.endDate) {
-      const start = filters.startDate ? parseISO(filters.startDate) : startOfYear(new Date(0));
-      const end = filters.endDate ? parseISO(filters.endDate) : new Date();
+      const start = filters.startDate ? new Date(filters.startDate + 'T00:00:00') : startOfYear(new Date(0));
+      const end = filters.endDate ? new Date(filters.endDate + 'T23:59:59') : new Date();
       if (!isWithinInterval(purchaseDate, { start, end })) {
         return false;
       }
@@ -143,6 +143,11 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
   const totalPages = Math.ceil(filteredBottles.length / ITEMS_PER_PAGE);
   const paginatedBottles = filteredBottles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+  const now = new Date();
+  const isThisMonth = filters.month === format(now, 'yyyy-MM') && !filters.startDate && !filters.endDate && !filters.type && !filters.minPrice && !filters.maxPrice;
+  const isLastMonth = filters.month === format(subMonths(now, 1), 'yyyy-MM') && !filters.startDate && !filters.endDate && !filters.type && !filters.minPrice && !filters.maxPrice;
+  const isThisYear = filters.startDate === format(startOfYear(now), 'yyyy-MM-dd') && filters.endDate === format(now, 'yyyy-MM-dd') && !filters.month && !filters.type && !filters.minPrice && !filters.maxPrice;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -189,19 +194,31 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                 <div className="flex flex-wrap gap-2">
                   <button 
                     onClick={() => setQuickFilter('this-month')}
-                    className="px-3 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-red-800 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      isThisMonth 
+                        ? 'bg-red-800 text-white shadow-md' 
+                        : 'bg-gray-50 hover:bg-red-50 hover:text-red-800 text-gray-600'
+                    }`}
                   >
                     This Month
                   </button>
                   <button 
                     onClick={() => setQuickFilter('last-month')}
-                    className="px-3 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-red-800 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      isLastMonth 
+                        ? 'bg-red-800 text-white shadow-md' 
+                        : 'bg-gray-50 hover:bg-red-50 hover:text-red-800 text-gray-600'
+                    }`}
                   >
                     Last Month
                   </button>
                   <button 
                     onClick={() => setQuickFilter('this-year')}
-                    className="px-3 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-red-800 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      isThisYear 
+                        ? 'bg-red-800 text-white shadow-md' 
+                        : 'bg-gray-50 hover:bg-red-50 hover:text-red-800 text-gray-600'
+                    }`}
                   >
                     This Year
                   </button>
@@ -387,7 +404,7 @@ export default function Reports({ bottles, onDelete, currency }: ReportsProps) {
                     <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-wider mt-0.5">
                       <span>{bottle.type}</span>
                       <span>•</span>
-                      <span>{format(parseISO(bottle.purchaseDate), 'MMM d, yyyy')}</span>
+                      <span>{format(new Date(bottle.purchaseDate.split('T')[0] + 'T12:00:00'), 'MMM d, yyyy')}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
