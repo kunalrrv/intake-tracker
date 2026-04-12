@@ -95,6 +95,7 @@ function AlcoholTrackerApp() {
   const [bottles, setBottles] = React.useState<Bottle[]>([]);
   const [moods, setMoods] = React.useState<Mood[]>([]);
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help' | 'mood'>('dashboard');
+  const [previousTab, setPreviousTab] = React.useState<'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help' | 'mood'>('dashboard');
   const [inventoryPage, setInventoryPage] = React.useState(1);
   const ITEMS_PER_PAGE = 5;
   const [isLoading, setIsLoading] = React.useState(true);
@@ -125,6 +126,11 @@ function AlcoholTrackerApp() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  const handleTabChange = (tab: 'dashboard' | 'inventory' | 'history' | 'reports' | 'settings' | 'help' | 'mood') => {
+    setPreviousTab(activeTab);
+    setActiveTab(tab);
+  };
 
   React.useEffect(() => {
     localStorage.setItem('currency', currency);
@@ -336,6 +342,90 @@ function AlcoholTrackerApp() {
       await batch.commit();
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bottles/import');
+    }
+  };
+
+  const handleLoadSampleData = async () => {
+    if (!user) return;
+    try {
+      const sampleBottles: Bottle[] = [
+        {
+          id: crypto.randomUUID(),
+          name: 'Cabernet Sauvignon',
+          type: 'Wine',
+          purchaseDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          price: 25.99,
+          volume: 750,
+          status: BottleStatus.FINISHED,
+          openedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+          finishedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+          uid: user.uid
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'Craft IPA',
+          type: 'Beer',
+          purchaseDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+          price: 12.50,
+          volume: 330,
+          status: BottleStatus.OPENED,
+          openedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          uid: user.uid
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'Single Malt Scotch',
+          type: 'Spirits',
+          purchaseDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+          price: 85.00,
+          volume: 700,
+          status: BottleStatus.UNOPENED,
+          uid: user.uid
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'Chardonnay',
+          type: 'Wine',
+          purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          price: 18.99,
+          volume: 750,
+          status: BottleStatus.FINISHED,
+          openedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          finishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          uid: user.uid
+        }
+      ];
+
+      const sampleMoods: Mood[] = [
+        {
+          id: crypto.randomUUID(),
+          date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          rating: 4,
+          note: 'Had a glass of wine, feeling relaxed.',
+          uid: user.uid
+        },
+        {
+          id: crypto.randomUUID(),
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          rating: 3,
+          note: 'A bit stressed, had a beer.',
+          uid: user.uid
+        }
+      ];
+
+      const batch = writeBatch(db);
+      sampleBottles.forEach((bottle) => {
+        const docRef = doc(collection(db, 'bottles'), bottle.id);
+        batch.set(docRef, bottle);
+      });
+      sampleMoods.forEach((mood) => {
+        const docRef = doc(collection(db, 'moods'), mood.id);
+        batch.set(docRef, mood);
+      });
+      await batch.commit();
+      alert('Sample data loaded successfully!');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'sample_data');
     }
   };
 
@@ -604,7 +694,7 @@ function AlcoholTrackerApp() {
           <div className="flex items-center gap-2">
             <div 
               className="flex items-center gap-2 mr-2 cursor-pointer"
-              onClick={() => setActiveTab('settings')}
+              onClick={() => handleTabChange('settings')}
             >
               <img 
                 src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}&background=random`} 
@@ -617,7 +707,7 @@ function AlcoholTrackerApp() {
               </span>
             </div>
             <button 
-              onClick={() => setActiveTab('settings')}
+              onClick={() => handleTabChange('settings')}
               className={`p-2 transition-colors ${activeTab === 'settings' ? 'text-red-800' : 'text-gray-400 hover:text-gray-600'}`}
               title="Settings"
             >
@@ -780,11 +870,13 @@ function AlcoholTrackerApp() {
                   bottles={bottles} 
                   onClearData={handleClearData}
                   onImportData={handleImportData}
+                  onLoadSampleData={handleLoadSampleData}
                   currency={currency}
                   onCurrencyChange={setCurrency}
                   onUpdateProfile={handleUpdateProfile}
                   deferredPrompt={deferredPrompt}
                   setDeferredPrompt={setDeferredPrompt}
+                  onBack={() => setActiveTab(previousTab !== 'settings' ? previousTab : 'dashboard')}
                 />
               </motion.div>
             )}
@@ -857,37 +949,37 @@ function AlcoholTrackerApp() {
         <div className="flex justify-between items-center max-w-lg mx-auto">
           <NavButton
             active={activeTab === 'dashboard'}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => handleTabChange('dashboard')}
             icon={<LayoutDashboard size={20} />}
             label="Home"
           />
           <NavButton
             active={activeTab === 'inventory'}
-            onClick={() => setActiveTab('inventory')}
+            onClick={() => handleTabChange('inventory')}
             icon={<Wine size={20} />}
             label="Bar"
           />
           <NavButton
             active={activeTab === 'mood'}
-            onClick={() => setActiveTab('mood')}
+            onClick={() => handleTabChange('mood')}
             icon={<Smile size={20} />}
             label="Mood"
           />
           <NavButton
             active={activeTab === 'reports'}
-            onClick={() => setActiveTab('reports')}
+            onClick={() => handleTabChange('reports')}
             icon={<BarChart3 size={20} />}
             label="Reports"
           />
           <NavButton
             active={activeTab === 'history'}
-            onClick={() => setActiveTab('history')}
+            onClick={() => handleTabChange('history')}
             icon={<History size={20} />}
             label="History"
           />
           <NavButton
             active={activeTab === 'help'}
-            onClick={() => setActiveTab('help')}
+            onClick={() => handleTabChange('help')}
             icon={<HeartHandshake size={20} />}
             label="Help Me"
           />

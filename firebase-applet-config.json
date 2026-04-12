@@ -3,7 +3,7 @@
   "appId": "1:202861592433:web:aaf4d622221989b0f2c0d0",
   "apiKey": "AIzaSyAlPjrZpAY3q5QmK-49zb3UqCjrPqrvuF0",
   "authDomain": "alcoholintaketracker.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-93f3606b-24d1-4a93-ae76-d03f0761f5e4",
+  "firestoreDatabaseId": "(default)",
   "storageBucket": "alcoholintaketracker.firebasestorage.app",
   "messagingSenderId": "202861592433",
   "measurementId": ""

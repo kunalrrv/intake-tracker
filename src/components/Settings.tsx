@@ -9,7 +9,8 @@ import {
   Save,
   Globe,
   Camera,
-  Smartphone
+  Smartphone,
+  ArrowLeft
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Bottle } from '../types';
@@ -19,11 +20,13 @@ interface SettingsProps {
   bottles: Bottle[];
   onClearData: () => Promise<void>;
   onImportData?: (data: Bottle[]) => Promise<void>;
+  onLoadSampleData?: () => Promise<void>;
   currency: string;
   onCurrencyChange: (currency: string) => void;
   onUpdateProfile: (displayName: string, photoURL: string) => Promise<void>;
   deferredPrompt?: any;
   setDeferredPrompt?: (prompt: any) => void;
+  onBack: () => void;
 }
 
 export default function Settings({ 
@@ -31,11 +34,13 @@ export default function Settings({
   bottles, 
   onClearData, 
   onImportData,
+  onLoadSampleData,
   currency, 
   onCurrencyChange, 
   onUpdateProfile,
   deferredPrompt,
-  setDeferredPrompt
+  setDeferredPrompt,
+  onBack
 }: SettingsProps) {
   const [displayName, setDisplayName] = React.useState(user.displayName || '');
   const [photoURL, setPhotoURL] = React.useState(user.photoURL || '');
@@ -143,7 +148,15 @@ export default function Settings({
 
   return (
     <div className="space-y-8 pb-12">
-      <h2 className="text-2xl font-bold">Settings</h2>
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={onBack}
+          className="p-2 bg-gray-50 text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-2xl font-bold">Settings</h2>
+      </div>
 
       {/* Profile Section */}
       <section className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
@@ -339,6 +352,24 @@ export default function Settings({
               <Upload size={14} />
             </div>
           </button>
+
+          {onLoadSampleData && (
+            <button 
+              onClick={onLoadSampleData}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-purple-50 rounded-2xl transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <Database className="text-purple-600" size={20} />
+                <div className="text-left">
+                  <p className="text-sm font-bold text-gray-900">Load Sample Data</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Populate with test data</p>
+                </div>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-purple-600 shadow-sm group-hover:scale-110 transition-transform">
+                <Database size={14} />
+              </div>
+            </button>
+          )}
 
           <button 
             onClick={onClearData}
